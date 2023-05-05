@@ -13,9 +13,13 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 import java.util.List;
 
+import static com.driver.model.SubscriptionType.*;
+
 @Service
 public class SubscriptionService {
 
+  //  private static final SubscriptionType BASIC = ;
+    //  private static final Object PRO = ;
     @Autowired
     SubscriptionRepository subscriptionRepository;
 
@@ -26,7 +30,26 @@ public class SubscriptionService {
 
         //Save The subscription Object into the Db and return the total Amount that user has to pay
 
-        return null;
+
+        Subscription subscription=new Subscription();
+        subscription.setSubscriptionType(subscriptionEntryDto.getSubscriptionType());
+        subscription.setNoOfScreensSubscribed(subscriptionEntryDto.getNoOfScreensRequired());
+        User user=userRepository.findById(subscriptionEntryDto.getUserId()).get();
+        subscription.setUser(user);
+        int amount=0;
+        if(subscriptionEntryDto.getSubscriptionType().equals(BASIC)){
+            amount=500+200* subscriptionEntryDto.getNoOfScreensRequired();
+        }else if(subscriptionEntryDto.getSubscriptionType().equals(PRO)){
+            amount=800+250*subscriptionEntryDto.getNoOfScreensRequired();
+        }else{
+            amount=1000+350*subscriptionEntryDto.getNoOfScreensRequired();
+        }
+        subscription.setTotalAmountPaid(amount);
+        user.setSubscription(subscription);
+        userRepository.save(user);
+        return amount;
+
+
     }
 
     public Integer upgradeSubscription(Integer userId)throws Exception{
@@ -35,7 +58,20 @@ public class SubscriptionService {
         //In all other cases just try to upgrade the subscription and tell the difference of price that user has to pay
         //update the subscription in the repository
 
-        return null;
+        User user=userRepository.findById(userId).get();
+        Subscription subscription=user.getSubscription();
+        if(subscription.getSubscriptionType().equals(ELITE)){
+            throw new Exception("Already the best Subscription");
+        }else if(subscription.getSubscriptionType().equals(PRO)){
+            subscription.setSubscriptionType(ELITE);
+            return 200+100*subscription.getNoOfScreensSubscribed();
+        }else{
+            subscription.setSubscriptionType(PRO);
+            return 300+50*subscription.getNoOfScreensSubscribed();
+        }
+
+
+
     }
 
     public Integer calculateTotalRevenueOfHotstar(){
